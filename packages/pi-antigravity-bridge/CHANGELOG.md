@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **stream-json: staged carrier agent explicitly declares standard tools (`write_file`, `edit_file`, `run_command`).** Custom agy agents omit `tools` by default to a read-only subset (`read_file`, `search_web`), suppressing write, edit, and command execution tools when running with `--agent`. Explicitly declaring `tools: [read_file, edit_file, write_file, run_command, manage_task, search_web]` restores full write and execution capabilities while keeping bridge MCP tools discoverable.
+
 ## [1.10.4] - 2026-11-10
 
 ### Fixed
