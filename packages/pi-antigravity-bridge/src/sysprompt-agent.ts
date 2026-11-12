@@ -9,13 +9,15 @@
 // under ~/.gemini/config/agents and passed via --agent: the CLI reads agent
 // files from disk, off the prompt line, so the cap never applies.
 //
-// Frontmatter keeps agy's DEFAULTS on purpose (no excludeDefaultComponents,
-// no tools list, no inheritMcp override): provider sessions need the normal
-// toolset and the bridge MCP config for G9 round-trips. The subagent keys are
-// the one deliberate exception: agent-file presence already suppresses agy's
-// native subagent tools (probed 2026-10-20, issue #7), and declaring it makes
-// the suppression explicit instead of relying on the accident (whether the
-// keys themselves mask, apart from presence, is unattributed).
+// Frontmatter explicitly declares the standard toolset (`tools: [read_file,
+// edit_file, write_file, run_command, manage_task, search_web]`): in agy, custom
+// agents without an explicit `tools` declaration default to a restricted
+// read-only subset (`read_file`, `search_web`), suppressing write/edit/command
+// tools (documented in agy's migrate-agent-settings guide). Declaring the
+// standard tools grants full write/edit/command access while keeping MCP tools
+// discoverable for G9 round-trips. The subagent keys are the deliberate
+// suppression of agy's native subagent tools (probed 2026-10-20, issue #7),
+// making the suppression explicit so Pi subagents are used instead.
 // Contrast the ask-tool reviewer agent, which strips everything for
 // sandboxing.
 //
@@ -56,6 +58,7 @@ export function syspromptAgentMd(name: string, body: string): string {
 		"model: inherit",
 		"subagent: false",
 		"agents: []",
+		"tools: [read_file, edit_file, write_file, run_command, manage_task, search_web]",
 		"---",
 		"",
 		body,

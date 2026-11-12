@@ -21,14 +21,19 @@ afterEach(() => {
 	resetSyspromptAgentForTests();
 });
 
-test("agent.md keeps agy defaults except the declared subagent masking", () => {
+test("agent.md declares standard tools and masks native subagents", () => {
 	const md = syspromptAgentMd("pi-bridge-sys-x", "BODY");
 	assert.match(md, /^---\nname: pi-bridge-sys-x\n/);
-	// The carrier must NOT strip agy's defaults: provider sessions need the
-	// normal toolset and the bridge MCP config for G9 round-trips.
+	// In agy, custom agents without an explicit `tools:` list are restricted
+	// to a small read-only toolset (omitting write_file, edit_file, run_command).
+	// The carrier explicitly declares the standard toolset so provider sessions
+	// retain full capabilities while keeping bridge MCP tools discoverable.
 	assert.equal(md.includes("excludeDefaultComponents"), false);
 	assert.equal(md.includes("inheritMcp"), false);
-	assert.equal(md.includes("tools:"), false);
+	assert.match(
+		md,
+		/tools:\s*\[read_file,\s*edit_file,\s*write_file,\s*run_command,\s*manage_task,\s*search_web\]/,
+	);
 	assert.ok(md.endsWith("BODY\n"));
 });
 
@@ -46,13 +51,21 @@ test("frontmatter parses as YAML (agy drops unparsable agents, issue #5)", () =>
 	assert.equal(fm.model, "inherit");
 });
 
-test("carrier declares native subagent masking explicitly (issue #7)", () => {
+test("carrier declares native subagent masking and standard tools explicitly (issue #7)", () => {
 	// Probe-verified 2026-10-20: agent-file presence already suppresses agy's
 	// native subagent tools. Pin the explicit frontmatter so the suppression
 	// is declared, not an undocumented accident.
 	const fm = parseAgentFrontmatter(syspromptAgentMd("pi-bridge-sys-x", "BODY"));
 	assert.equal(fm.subagent, false);
 	assert.deepEqual(fm.agents, []);
+	assert.deepEqual(fm.tools, [
+		"read_file",
+		"edit_file",
+		"write_file",
+		"run_command",
+		"manage_task",
+		"search_web",
+	]);
 });
 
 test("stageSyspromptAgent writes agent.md + pid marker and returns the name", () => {
